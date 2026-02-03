@@ -1,0 +1,161 @@
+import UIKit
+
+class TaskListHeaderView: UIView {
+    
+    // MARK: - UI Components
+    private let todayLabel: UILabel = {
+        let label = UILabel()
+        label.text = "TODAY'S FOCUS"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = UIColor(white: 0.6, alpha: 1.0)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let blueDot: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0)
+        view.layer.cornerRadius = 4
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let dateLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 32, weight: .bold)
+        label.textColor = .white
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let progressView: CircularProgressView = {
+        let view = CircularProgressView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    // MARK: - Initialization
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+        updateDate()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Setup
+    private func setupUI() {
+        backgroundColor = .clear
+        
+        addSubview(blueDot)
+        addSubview(todayLabel)
+        addSubview(dateLabel)
+        addSubview(progressView)
+        
+        NSLayoutConstraint.activate([
+            // Blue Dot
+            blueDot.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            blueDot.topAnchor.constraint(equalTo: topAnchor, constant: 20),
+            blueDot.widthAnchor.constraint(equalToConstant: 8),
+            blueDot.heightAnchor.constraint(equalToConstant: 8),
+            
+            // Today Label
+            todayLabel.leadingAnchor.constraint(equalTo: blueDot.trailingAnchor, constant: 8),
+            todayLabel.centerYAnchor.constraint(equalTo: blueDot.centerYAnchor),
+            
+            // Date Label
+            dateLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            dateLabel.topAnchor.constraint(equalTo: blueDot.bottomAnchor, constant: 12),
+            dateLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20),
+            
+            // Progress View
+            progressView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            progressView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            progressView.widthAnchor.constraint(equalToConstant: 60),
+            progressView.heightAnchor.constraint(equalToConstant: 60)
+        ])
+    }
+    
+    private func updateDate() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMM d"
+        dateLabel.text = formatter.string(from: Date())
+    }
+    
+    func updateProgress(completed: Int, total: Int) {
+        progressView.updateProgress(completed: completed, total: total)
+    }
+}
+
+// MARK: - Circular Progress View
+class CircularProgressView: UIView {
+    private let progressLayer = CAShapeLayer()
+    private let backgroundLayer = CAShapeLayer()
+    private let progressLabel = UILabel()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        backgroundColor = .clear
+        
+        // Background circle
+        backgroundLayer.strokeColor = UIColor(white: 0.2, alpha: 1.0).cgColor
+        backgroundLayer.fillColor = UIColor.clear.cgColor
+        backgroundLayer.lineWidth = 4
+        layer.addSublayer(backgroundLayer)
+        
+        // Progress circle
+        progressLayer.strokeColor = UIColor(red: 0.0, green: 0.7, blue: 1.0, alpha: 1.0).cgColor
+        progressLayer.fillColor = UIColor.clear.cgColor
+        progressLayer.lineWidth = 4
+        progressLayer.lineCap = .round
+        progressLayer.strokeEnd = 0
+        layer.addSublayer(progressLayer)
+        
+        // Progress label
+        progressLabel.textColor = .white
+        progressLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        progressLabel.textAlignment = .center
+        progressLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(progressLabel)
+        
+        NSLayoutConstraint.activate([
+            progressLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            progressLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        let radius = min(bounds.width, bounds.height) / 2 - 4
+        let path = UIBezierPath(arcCenter: center, radius: radius, startAngle: -.pi / 2, endAngle: .pi * 1.5, clockwise: true)
+        
+        backgroundLayer.path = path.cgPath
+        progressLayer.path = path.cgPath
+    }
+    
+    func updateProgress(completed: Int, total: Int) {
+        let progress = total > 0 ? CGFloat(completed) / CGFloat(total) : 0
+        progressLabel.text = "\(completed)/\(total)"
+        
+        let animation = CABasicAnimation(keyPath: "strokeEnd")
+        animation.fromValue = progressLayer.strokeEnd
+        animation.toValue = progress
+        animation.duration = 0.3
+        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        progressLayer.strokeEnd = progress
+        progressLayer.add(animation, forKey: "progress")
+    }
+}
+

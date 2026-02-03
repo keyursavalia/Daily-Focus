@@ -25,15 +25,17 @@ class TaskViewModel {
         
         // Default task for first-time users
         if tasks.isEmpty && shouldAddDefaultTask {
-            tasks = [FocusTask(title: "Tap to complete", isCompleted: false)]
+            tasks = [FocusTask(title: "Tap to complete", isCompleted: false, priority: TaskPriority.medium, isCarriedOver: false)]
             saveTasks()
         }
     }
     
     /// Adds a new task if under the limit
-    /// - Parameter title: The task title
+    /// - Parameters:
+    ///   - title: The task title
+    ///   - priority: The task priority (default: .medium)
     /// - Returns: Result indicating success or failure with reason
-    func addTask(title: String) -> Result<Void, TaskError> {
+    func addTask(title: String, priority: TaskPriority = .medium) -> Result<Void, TaskError> {
         guard !title.trimmingCharacters(in: .whitespaces).isEmpty else {
             return .failure(.emptyTitle)
         }
@@ -42,11 +44,29 @@ class TaskViewModel {
             return .failure(.limitReached)
         }
         
-        let newTask = FocusTask(title: title, isCompleted: false)
+        let newTask = FocusTask(title: title, isCompleted: false, priority: priority, isCarriedOver: false)
         tasks.append(newTask)
         saveTasks()
         
         return .success(())
+    }
+    
+    /// Updates task priority
+    /// - Parameters:
+    ///   - index: The index of the task
+    ///   - priority: The new priority
+    func updateTaskPriority(at index: Int, priority: TaskPriority) {
+        guard index < tasks.count else { return }
+        tasks[index].priority = priority
+        saveTasks()
+    }
+    
+    /// Marks a task as carried over
+    /// - Parameter index: The index of the task
+    func markAsCarriedOver(at index: Int) {
+        guard index < tasks.count else { return }
+        tasks[index].isCarriedOver = true
+        saveTasks()
     }
     
     /// Toggles the completion status of a task
@@ -76,6 +96,11 @@ class TaskViewModel {
     /// Returns the number of tasks
     var taskCount: Int {
         return tasks.count
+    }
+    
+    /// Checks if more tasks can be added
+    var canAddMoreTasks: Bool {
+        return tasks.count < maxTaskLimit
     }
     
     // MARK: - Private Methods
