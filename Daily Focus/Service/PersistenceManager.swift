@@ -1,10 +1,12 @@
 import Foundation
 
-struct PersistenceManager {
-    static let tasksKey = "userTasks"
+class PersistenceManager: PersistenceManagerProtocol {
+    static let shared = PersistenceManager()
+    private let tasksKey = "userTasks"
     
-    // save array to disk
-    static func save(tasks: [FocusTask]) {
+    private init() {} // Singleton
+    
+    func save(tasks: [FocusTask]) {
         do {
             let encoder = JSONEncoder()
             let data = try encoder.encode(tasks)
@@ -14,8 +16,7 @@ struct PersistenceManager {
         }
     }
     
-    // load array from disk
-    static func load() -> [FocusTask] {
+    func load() -> [FocusTask] {
         guard let data = UserDefaults.standard.data(forKey: tasksKey) else { return [] }
         
         do {
