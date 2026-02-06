@@ -34,6 +34,21 @@ class TaskListHeaderView: UIView {
         return view
     }()
     
+    private let resetButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        button.setImage(UIImage(systemName: "arrow.clockwise", withConfiguration: config), for: .normal)
+        button.tintColor = UIColor(white: 0.6, alpha: 1.0)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    var onResetTapped: (() -> Void)?
+    
+    // MARK: - Constraints
+    private var progressViewTrailingToResetButton: NSLayoutConstraint?
+    private var progressViewTrailingToSuperview: NSLayoutConstraint?
+    
     // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -53,6 +68,13 @@ class TaskListHeaderView: UIView {
         addSubview(todayLabel)
         addSubview(dateLabel)
         addSubview(progressView)
+        addSubview(resetButton)
+        
+        resetButton.addTarget(self, action: #selector(resetButtonTapped), for: .touchUpInside)
+        
+        // Create constraints for progress view positioning
+        progressViewTrailingToResetButton = progressView.trailingAnchor.constraint(equalTo: resetButton.leadingAnchor, constant: -16)
+        progressViewTrailingToSuperview = progressView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20)
         
         NSLayoutConstraint.activate([
             // Blue Dot
@@ -70,12 +92,48 @@ class TaskListHeaderView: UIView {
             dateLabel.topAnchor.constraint(equalTo: blueDot.bottomAnchor, constant: 12),
             dateLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20),
             
-            // Progress View
-            progressView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            // Progress View (common constraints)
             progressView.centerYAnchor.constraint(equalTo: centerYAnchor),
             progressView.widthAnchor.constraint(equalToConstant: 60),
-            progressView.heightAnchor.constraint(equalToConstant: 60)
+            progressView.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Reset Button
+            resetButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            resetButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+            resetButton.widthAnchor.constraint(equalToConstant: 44),
+            resetButton.heightAnchor.constraint(equalToConstant: 44)
         ])
+        
+        // Initially, reset button is hidden, so use superview constraint
+        progressViewTrailingToSuperview?.isActive = true
+        progressViewTrailingToResetButton?.isActive = false
+    }
+    
+    @objc private func resetButtonTapped() {
+        onResetTapped?()
+    }
+    
+    func updateResetButtonVisibility(hasTasks: Bool) {
+        let wasHidden = resetButton.isHidden
+        resetButton.isHidden = !hasTasks
+        
+        // Update constraints based on visibility
+        if hasTasks {
+            // Show reset button - position progress view relative to reset button
+            progressViewTrailingToSuperview?.isActive = false
+            progressViewTrailingToResetButton?.isActive = true
+        } else {
+            // Hide reset button - return progress view to original position
+            progressViewTrailingToResetButton?.isActive = false
+            progressViewTrailingToSuperview?.isActive = true
+        }
+        
+        // Animate layout change if visibility changed
+        if wasHidden != resetButton.isHidden {
+            UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
+                self.layoutIfNeeded()
+            })
+        }
     }
     
     private func updateDate() {

@@ -62,4 +62,9 @@ class PersistenceManager: PersistenceManagerProtocol {
             return []
         }
     }
+    
+    /// Clears all tasks from persistence
+    func clearAllTasks() {
+        UserDefaults.standard.removeObject(forKey: tasksKey)
+    }
 }

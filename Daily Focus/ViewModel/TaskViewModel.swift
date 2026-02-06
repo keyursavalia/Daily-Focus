@@ -98,6 +98,12 @@ class TaskViewModel {
         return tasks.count < maxTaskLimit
     }
     
+    /// Resets all tasks - clears the entire task list
+    func resetAllTasks() {
+        tasks.removeAll()
+        saveTasks()
+    }
+    
     // MARK: - Private Methods
     
     private func saveTasks() {

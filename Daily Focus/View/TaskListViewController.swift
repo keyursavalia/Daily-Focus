@@ -51,6 +51,9 @@ class TaskListViewController: UIViewController {
     
     private func configureHeader() {
         headerView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.onResetTapped = { [weak self] in
+            self?.showResetConfirmation()
+        }
         
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -125,6 +128,9 @@ class TaskListViewController: UIViewController {
         
         // Update progress
         headerView.updateProgress(completed: completed, total: total)
+        
+        // Update reset button visibility
+        headerView.updateResetButtonVisibility(hasTasks: !isEmpty)
         
         // Update footer message
         footerView.updateMessage(isEmpty: isEmpty)
@@ -215,6 +221,26 @@ class TaskListViewController: UIViewController {
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+    
+    private func showResetConfirmation() {
+        let alert = UIAlertController(
+            title: "Reset All Tasks",
+            message: "Are you sure you want to delete all tasks? This action cannot be undone.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Reset", style: .destructive) { [weak self] _ in
+            self?.resetAllTasks()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    private func resetAllTasks() {
+        viewModel.resetAllTasks()
+        // UI will update automatically via Combine binding
     }
 }
 
