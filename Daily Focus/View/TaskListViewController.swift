@@ -151,11 +151,11 @@ class TaskListViewController: UIViewController {
         // Update footer message
         footerView.updateMessage(isEmpty: isEmpty)
         
-        // Graffiti rain when all 3 tasks completed
-        if total == 3 && completed == 3 && !hasShownGraffitiRain {
+        // Graffiti rain when all tasks for the day are completed (1, 2, or 3)
+        if total > 0 && completed == total && !hasShownGraffitiRain {
             hasShownGraffitiRain = true
             showGraffitiRain()
-        } else if completed < 3 {
+        } else if completed < total {
             hasShownGraffitiRain = false  // Reset if user uncompletes a task
         }
     }
